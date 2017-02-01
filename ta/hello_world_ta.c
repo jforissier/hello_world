@@ -25,118 +25,81 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define STR_TRACE_USER_TA "HELLO_WORLD"
-
-#include <tee_internal_api.h>
-#include <tee_internal_api_extensions.h>
-
-#include "hello_world_ta.h"
-
 /*
- * Called when the instance of the TA is created. This is the first call in
- * the TA.
+ * TA example for gprof. Build environment: OP-TEE and QEMU.
+ * (https://github.com/OP-TEE/manifest default.xml)
+ *
+ * - make -C build CFG_TA_GPROF_SUPPORT=y CFLAGS_ta_arm32="-pg -Wno-pedantic" \
+ *                 QEMU_VIRTFS_ENABLE=y QEMU_VIRTFS_HOST_DIR=/tmp run
+ * -   root@Vexpress:/ hello_world
+ *     root@Vexpress:/ mkdir /tmp/host; mount_shared /tmp/host
+ *     root@Vexpress:/ cp /tmp/gmon* /tmp/host
+ * - gprof hello_world/ta/8a*.elf /tmp/gmon-8a*.out
  */
+#include <tee_internal_api.h>
+#include <trace.h>
+
+#define TIME_MS() ({				\
+	TEE_Time t;				\
+						\
+	TEE_GetSystemTime(&t);			\
+	t.seconds * 1000 + t.millis;		\
+})
+
+#define SPIN(sec) do {                          \
+        int _i;                                 \
+        uint64_t t0 = TIME_MS();                \
+                                                \
+        while (TIME_MS() < t0 + sec * 1000)     \
+                for (_i = 0; _i < 10000; _i++)  \
+                        ;                       \
+} while(0)
+
+static void foo(int sec)
+{
+        IMSG("foo");
+        SPIN(sec);
+}
+
+static void bar(void)
+{
+        int i;
+
+        IMSG("bar");
+        SPIN(3);
+        for (i = 0; i < 3; i++)
+                foo(1);
+}
+
+TEE_Result TA_InvokeCommandEntryPoint(void __unused *sess_ctx,
+			uint32_t __unused cmd_id,
+			uint32_t __unused param_types,
+			TEE_Param __unused params[4])
+{
+	IMSG("TA_InvokeCommandEntryPoint");
+	SPIN(2);
+	foo(2);
+	bar();
+	return TEE_SUCCESS;
+}
+
 TEE_Result TA_CreateEntryPoint(void)
 {
-	DMSG("has been called");
 	return TEE_SUCCESS;
 }
 
-/*
- * Called when the instance of the TA is destroyed if the TA has not
- * crashed or panicked. This is the last call in the TA.
- */
 void TA_DestroyEntryPoint(void)
 {
-	DMSG("has been called");
 }
 
-/*
- * Called when a new session is opened to the TA. *sess_ctx can be updated
- * with a value to be able to identify this session in subsequent calls to the
- * TA. In this function you will normally do the global initialization for the
- * TA.
- */
-TEE_Result TA_OpenSessionEntryPoint(uint32_t param_types,
-		TEE_Param __maybe_unused params[4],
-		void __maybe_unused **sess_ctx)
+TEE_Result TA_OpenSessionEntryPoint(uint32_t __unused param_types,
+		TEE_Param __unused params[4],
+		void __unused **sess_ctx)
 {
-	uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_NONE,
-						   TEE_PARAM_TYPE_NONE,
-						   TEE_PARAM_TYPE_NONE,
-						   TEE_PARAM_TYPE_NONE);
-	if (param_types != exp_param_types)
-		return TEE_ERROR_BAD_PARAMETERS;
-
-	/* Unused parameters */
-	(void)&params;
-	(void)&sess_ctx;
-
-	/*
-	 * The DMSG() macro is non-standard, TEE Internal API doesn't
-	 * specify any means to logging from a TA.
-	 */
-	DMSG("Hello World!\n");
-
-	/* If return value != TEE_SUCCESS the session will not be created. */
 	return TEE_SUCCESS;
 }
 
-/*
- * Called when a session is closed, sess_ctx hold the value that was
- * assigned by TA_OpenSessionEntryPoint().
- */
-void TA_CloseSessionEntryPoint(void __maybe_unused *sess_ctx)
+void TA_CloseSessionEntryPoint(void __unused *sess_ctx)
 {
-	(void)&sess_ctx; /* Unused parameter */
-	DMSG("Goodbye!\n");
 }
 
-static TEE_Result inc_value(uint32_t param_types,
-	TEE_Param params[4])
-{
-	uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INOUT,
-						   TEE_PARAM_TYPE_NONE,
-						   TEE_PARAM_TYPE_NONE,
-						   TEE_PARAM_TYPE_NONE);
-
-	DMSG("has been called");
-	if (param_types != exp_param_types)
-		return TEE_ERROR_BAD_PARAMETERS;
-
-	DMSG("Got value: %u from NW", params[0].value.a);
-	params[0].value.a++;
-	DMSG("Increase value to: %u", params[0].value.a);
-	return TEE_SUCCESS;
-}
-
-/*
- * Called when a TA is invoked. sess_ctx hold that value that was
- * assigned by TA_OpenSessionEntryPoint(). The rest of the paramters
- * comes from normal world.
- */
-TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
-			uint32_t cmd_id,
-			uint32_t param_types, TEE_Param params[4])
-{
-	(void)&sess_ctx; /* Unused parameter */
-
-	switch (cmd_id) {
-	case TA_HELLO_WORLD_CMD_INC_VALUE:
-		return inc_value(param_types, params);
-#if 0
-	case TA_HELLO_WORLD_CMD_XXX:
-		return ...
-		break;
-	case TA_HELLO_WORLD_CMD_YYY:
-		return ...
-		break;
-	case TA_HELLO_WORLD_CMD_ZZZ:
-		return ...
-		break;
-	...
-#endif
-	default:
-		return TEE_ERROR_BAD_PARAMETERS;
-	}
-}
