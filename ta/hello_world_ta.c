@@ -32,13 +32,32 @@
 
 #include "hello_world_ta.h"
 
+
+/*
+ * Create a global symbol in the .rodata section.
+ * This is a 64-bit value set to the value of __text_start.
+ * This will create a R_AARCH64_ABS64 relocation.
+ */
+asm (".pushsection .rodata");
+asm (".global _reloc__text_start");
+asm ("_reloc__text_start:");
+asm (".quad __text_start");
+asm (".popsection");
+
+/* C declarations to be able to print the values easily */
+extern uint8_t __text_start;
+extern uint64_t _reloc__text_start;
+
 /*
  * Called when the instance of the TA is created. This is the first call in
  * the TA.
  */
 TEE_Result TA_CreateEntryPoint(void)
 {
-	DMSG("has been called");
+	DMSG("&__text_start=%p", (void *)&__text_start);
+	DMSG("&_reloc__text_start=%p", (void *)&_reloc__text_start);
+	/* NB: &_reloc__text_start != _reloc__text_start due to load address */
+	DMSG("_reloc__text_start=%p", (void *)_reloc__text_start);
 	return TEE_SUCCESS;
 }
 
