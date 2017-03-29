@@ -31,6 +31,7 @@
 #include <tee_internal_api_extensions.h>
 
 #include "hello_world_ta.h"
+#include "libtest/test.h"
 
 /*
  * Called when the instance of the TA is created. This is the first call in
@@ -39,6 +40,7 @@
 TEE_Result TA_CreateEntryPoint(void)
 {
 	DMSG("has been called");
+	foo();
 	return TEE_SUCCESS;
 }
 
