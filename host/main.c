@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 
    // TA encrypt and decrypt
    local_encrypt_and_decrypt_in_secure_world ();
-   // encrypt_in_secure_world ();
-   // decrypt_in_secure_world ();
+   encrypt_in_secure_world ();
+   decrypt_in_secure_world ();
 
    // finally finished
    printf("Testing finished\n\n");
