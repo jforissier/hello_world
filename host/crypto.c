@@ -54,12 +54,12 @@ char private_key[] =
 RSA *createRSA (unsigned char *key, int public);
 
 // encrypt in string using the private key
-BOOLEAN encrypt_using_private_key (char * in, int in_len, char * out, int * out_len) {
+BOOLEAN encrypt_using_public_key (char * in, int in_len, char * out, int * out_len) {
 
    RSA * rsa;
 
-   rsa = createRSA ((unsigned char *) private_key, 0);
-   *out_len = RSA_private_encrypt (in_len, (unsigned char *)in, (unsigned char *)out, rsa, RSA_PKCS1_PADDING);
+   rsa = createRSA ((unsigned char *) public_key, 1);
+   *out_len = RSA_public_encrypt (in_len, (unsigned char *)in, (unsigned char *)out, rsa, RSA_PKCS1_PADDING);
 
    if (*out_len == -1) {
       return FALSE;
@@ -69,12 +69,12 @@ BOOLEAN encrypt_using_private_key (char * in, int in_len, char * out, int * out_
 }
 
 // decrypt in string using the public key
-BOOLEAN decrypt_using_public_key (char * in, int in_len, char * out, int * out_len) {
+BOOLEAN decrypt_using_private_key (char * in, int in_len, char * out, int * out_len) {
 
    RSA * rsa;
 
-   rsa = createRSA ((unsigned char *) public_key, 1);
-   *out_len = RSA_public_decrypt (in_len, (unsigned char *)in, (unsigned char *) out, rsa, RSA_PKCS1_PADDING);
+   rsa = createRSA ((unsigned char *) private_key, 0);
+   *out_len = RSA_private_decrypt (in_len, (unsigned char *)in, (unsigned char *) out, rsa, RSA_PKCS1_PADDING);
 
    if (*out_len == -1)
       return FALSE;

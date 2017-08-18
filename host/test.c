@@ -60,10 +60,10 @@ void local_encrypt_and_decrypt (void) {
 
    printf("<<<<<<<<<<<<<<<<<<<<<<<<<<< local_encrypt_and_decrypt >>>>>>>>>>>>>>>>>>>>>>>>>\n");
    printf ("\n");
-   printf ("First encrypt using the private key, then decrypt the using the public key\n");
+   printf ("First encrypt using the public key, then decrypt the using the private key\n");
    printf ("\n");
-   encrypt_using_private_key (test_in,        test_in_len,        test_encrypted, &test_encrypted_len);
-   decrypt_using_public_key  (test_encrypted, test_encrypted_len, test_decrypted, &test_decrypted_len);
+   encrypt_using_public_key (test_in,        test_in_len,        test_encrypted, &test_encrypted_len);
+   decrypt_using_private_key  (test_encrypted, test_encrypted_len, test_decrypted, &test_decrypted_len);
    printf ("\n");
    printf ("Origional string (26 chars): %s\n", test_in);
    printf ("Origional string len:        %i\n", test_in_len);
@@ -163,13 +163,14 @@ void encrypt_in_secure_world (void) {
    printf ("Encrypt in secure world test\n");
    printf ("\n");
    memcpy(field_in.buffer, test_in, test_in_len);
+   op.params[0].memref.size = test_in_len;
    rc = TEEC_InvokeCommand(&sess, TEST_ENCRYPT_IN_TA_COMMAND, &op, &err_origin);
    check_rc(rc, "TEEC_InvokeCommand", &err_origin);
-   decrypt_using_public_key ((char *)field_back.buffer, field_back.size, test_decrypted, &test_decrypted_len);
+   decrypt_using_private_key ((char *)field_back.buffer, op.params[1].memref.size, test_decrypted, &test_decrypted_len);
    printf ("Origional string (26 chars):  %s\n", test_in);
    printf ("Origional string len:         %i\n", test_in_len);
    printf ("SW Encryted value:            %s\n", (char *) field_back.buffer);
-   printf ("SW Encryted len:              %i\n", (int) field_back.size);
+   printf ("SW Encryted len:              %i\n", (int) op.params[1].memref.size);
    printf ("NW Decrypted value:           %s\n", test_decrypted);
    printf ("NW Decrypted len:             %i\n", test_decrypted_len);
    printf ("\n");
@@ -210,12 +211,20 @@ void decrypt_in_secure_world (void) {
    rc = TEEC_OpenSession(&ctx, &sess, &uuid, TEEC_LOGIN_PUBLIC, NULL, NULL, &err_origin);
    check_rc(rc, "TEEC_OpenSession", &err_origin);
 
+   // prepare for encrypt
+   printf ("\n");
+   printf ("Decrypt in secure world test\n");
+   printf ("\n");
+   encrypt_using_public_key (test_in, test_in_len, test_encrypted, &test_encrypted_len);
+
    // ok, create the needed shared memory blocks we will be using later
    field_in.buffer = NULL;
-   field_in.size = 256;
+   field_in.size = test_encrypted_len;
    field_in.flags = TEEC_MEM_INPUT;
    rc = TEEC_AllocateSharedMemory(&ctx, &field_in);
    check_rc(rc, "TEEC_AllocateSharedMemory for field_in", NULL);
+
+   memcpy(field_in.buffer, test_encrypted, test_encrypted_len);
 
    // field back
    field_back.buffer = NULL;
@@ -232,13 +241,6 @@ void decrypt_in_secure_world (void) {
    op.params[0].memref.parent = &field_in;
    op.params[1].memref.parent = &field_back;
 
-   // prepare for encrypt
-   printf ("\n");
-   printf ("Decrypt in secure world test\n");
-   printf ("\n");
-   encrypt_using_private_key (test_in, test_in_len, test_encrypted, &test_encrypted_len);
-   memcpy(field_in.buffer, test_encrypted, test_encrypted_len);
-
    // decrypt in TA
    rc = TEEC_InvokeCommand(&sess, TEST_DECRYPT_IN_TA_COMMAND, &op, &err_origin);
    printf ("Origional string (26 chars): %s\n", test_in);
@@ -246,7 +248,7 @@ void decrypt_in_secure_world (void) {
    printf ("NW Encryted value:           %s\n", test_encrypted);
    printf ("NW Encryted len:             %i\n", test_encrypted_len);
    printf ("SW Decrypted value:          %s\n", (char *) field_back.buffer);
-   printf ("SW Decrypted field len:      %i\n", (int) field_back.size);
+   printf ("SW Decrypted field len:      %i\n", (int) op.params[1].memref.size);
    printf ("\n");
    printf("<<<<<<<<<<<<<<<<<<<<<<<<<<< end of test >>>>>>>>>>>>>>>>>>>>>>>>\n");
 

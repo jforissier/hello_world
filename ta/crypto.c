@@ -55,7 +55,7 @@ uint8_t private_key[] =
 "\x20\xc2\x03\x7d";
 
 // self explanitory really
-BOOLEAN decrypt_using_public_key (char * in, int in_len, char * out, int * out_len) {
+BOOLEAN decrypt_using_private_key (char * in, int in_len, char * out, int * out_len) {
 
    TEE_Result ret = TEE_SUCCESS; // return code
    TEE_ObjectHandle key = (TEE_ObjectHandle) NULL;
@@ -143,7 +143,7 @@ BOOLEAN decrypt_using_public_key (char * in, int in_len, char * out, int * out_l
 }
 
 // encrypt
-BOOLEAN encrypt_using_private_key (char * in, int in_len, char * out, int * out_len) {
+BOOLEAN encrypt_using_public_key (char * in, int in_len, char * out, int * out_len) {
 
    TEE_Result ret = TEE_SUCCESS; // return code
    TEE_ObjectHandle key = (TEE_ObjectHandle) NULL;
@@ -168,7 +168,7 @@ BOOLEAN encrypt_using_private_key (char * in, int in_len, char * out, int * out_
    rsa_attrs[2].content.ref.length = SIZE_OF_VEC (private_key);
 
    // create a transient object
-   ret = TEE_AllocateTransientObject(TEE_TYPE_RSA_KEYPAIR, 1024, &key);
+   ret = TEE_AllocateTransientObject(TEE_TYPE_RSA_KEYPAIR, 512, &key);
    if (ret != TEE_SUCCESS) {
       return TEE_ERROR_BAD_PARAMETERS;
    }

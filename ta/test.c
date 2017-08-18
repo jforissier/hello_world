@@ -44,8 +44,9 @@ TEE_Result TA_encrypt_command (TEE_Param params[4]) {
    int encrypted_len;
 
    DMSG("<<<<<<<<<<<<<<<<<<<<<<<<<<< test_encrypt_ta >>>>>>>>>>>>>>>>>>>>>>>>> ");
-   encrypt_using_private_key (in, in_len, encrypted, &encrypted_len);
+   encrypt_using_public_key (in, in_len, encrypted, &encrypted_len);
    memcpy(params[1].memref.buffer, encrypted, encrypted_len);
+   params[1].memref.size = encrypted_len;
    params[2].value.a = 0;
    DMSG ("");
    DMSG ("In value:            %s", in);
@@ -67,10 +68,10 @@ TEE_Result TA_decrypt_command (TEE_Param params[4]) {
 
    // will be encrypted into here
    char decrypted [256];
-   int decrypted_len;
+   int decrypted_len = 0;
 
    DMSG("<<<<<<<<<<<<<<<<<<<<<<<<<<< test_decrypt_ta >>>>>>>>>>>>>>>>>>>>>>>>> ");
-   decrypt_using_public_key  (in, in_len, decrypted, &decrypted_len);
+   decrypt_using_private_key  (in, in_len, decrypted, &decrypted_len);
    memcpy(params[1].memref.buffer, decrypted, decrypted_len);
    params[1].memref.size = decrypted_len;
    params[2].value.a = 0;
@@ -91,16 +92,16 @@ void local_encrypt_and_decrypt_test (void) {
    // just some testing
    char test_in [] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
    int test_in_len = strlen (test_in);
-   char test_encrypted [256];
+   char test_encrypted [256] = { '\0', };
    int test_encrypted_len;
-   char test_decrypted [256];
+   char test_decrypted [256] = { '\0', };
    int test_decrypted_len;
 
    DMSG("<<<<<<<<<<<<<<<<<<<<<<<<<<< check_en_decrypt >>>>>>>>>>>>>>>>>>>>>>>>> ");
-   encrypt_using_private_key (test_in,        test_in_len,        test_encrypted, &test_encrypted_len);
-   decrypt_using_public_key  (test_encrypted, test_encrypted_len, test_decrypted, &test_decrypted_len);
+   encrypt_using_public_key (test_in,        test_in_len,        test_encrypted, &test_encrypted_len);
+   decrypt_using_private_key  (test_encrypted, test_encrypted_len, test_decrypted, &test_decrypted_len);
    DMSG ("");
-   DMSG ("In value (22 chars):     %s", test_in);
+   DMSG ("In value:                %s", test_in);
    DMSG ("In len:                  %i", test_in_len);
    DMSG ("SW encryted value:       %s", test_encrypted);
    DMSG ("SW encryted len:         %i", test_encrypted_len);
