@@ -14,7 +14,7 @@ CFLAGS += -Wall -I../ta -I$(TEEC_EXPORT)/include -I/usr/include
 # copied opensslconf.h from /usr/include/x86_64-linux-gnu/openssl => /usr/install/openssl
 
 LDADD += -lteec -L$(TEEC_EXPORT)/lib
-LDFLAGS += /home/ursus/devel/optee/fim/libs/libcrypto.a
+LDFLAGS += ../../optee_test/host/lib/armv7/libcrypto.a
 # Add/link other required libraries here
 # LDADD += -lteec -L$(TEEC_EXPORT)/lib -lcrypto -lssl
 
