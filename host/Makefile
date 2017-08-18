@@ -18,7 +18,7 @@ LDFLAGS += ../../optee_test/host/lib/armv7/libcrypto.a
 # Add/link other required libraries here
 # LDADD += -lteec -L$(TEEC_EXPORT)/lib -lcrypto -lssl
 
-BINARY=rsa
+BINARY=hello_world
 
 .PHONY: all
 all: $(BINARY)

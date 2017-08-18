@@ -27,11 +27,8 @@
 
 /* This UUID is generated with uuidgen
 the ITU-T UUID generator at http://www.itu.int/ITU-T/asn1/uuid.html */
-
-/* Version 4 UUID Generator used on 15.08.2017 @ 23:00
-d6f85138-131c-4f86-b746-a066b2536e69     */
-
-#define TEST_TA_UUID { 0xd6f85138, 0x131c, 0x4f86, {0xb7, 0x46, 0xa0, 0x66, 0xb2, 0x53, 0x6e, 0x69} }
+#define TEST_TA_UUID { 0x8aaaf200, 0x2450, 0x11e4, \
+		{ 0xab, 0xe2, 0x00, 0x02, 0xa5, 0xd5, 0xc5, 0x1b} }
 
 /* The Trusted Application Function ID(s) implemented in this TA */
 #define TEST_EN_DE_CRYPT_COMMAND 0
